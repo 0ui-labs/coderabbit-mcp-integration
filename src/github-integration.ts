@@ -216,8 +216,8 @@ export class GitHubIntegration {
       // Commit changes
       await this.git.commit(`feat: ${params.title}`);
       
-      // Push to GitHub with set-upstream
-      await this.git.push(['--set-upstream', 'origin', params.branch]);
+      // Push to GitHub with set-upstream (with force-push protection)
+      await this.git.push(['--set-upstream', 'origin', params.branch, '--no-force']);
       
       // Create PR
       const pr = await this.createPullRequest({
