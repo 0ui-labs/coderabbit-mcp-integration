@@ -1,6 +1,9 @@
 import { Octokit } from '@octokit/rest';
 import { simpleGit, SimpleGit } from 'simple-git';
 
+// CodeRabbit bot usernames (GitHub Apps can have [bot] suffix)
+const CODERABBIT_USERNAMES = ['coderabbitai', 'coderabbitai[bot]'];
+
 export class GitHubIntegration {
   private octokit: Octokit;
   private git: SimpleGit;
@@ -59,10 +62,12 @@ export class GitHubIntegration {
         issue_number: params.prNumber
       });
 
-      // Filter for CodeRabbit comments
-      const coderabbitComments = comments.data.filter(
-        comment => comment.user?.login === 'coderabbitai'
-      );
+      // Filter for CodeRabbit comments (including bot variant)
+      const coderabbitComments = comments.data.filter(comment => {
+        if (!comment.user?.login) return false;
+        const username = comment.user.login.toLowerCase();
+        return CODERABBIT_USERNAMES.includes(username);
+      });
 
       return coderabbitComments.map(comment => ({
         id: comment.id,
@@ -91,10 +96,12 @@ export class GitHubIntegration {
         pull_number: params.prNumber
       });
 
-      // Filter for CodeRabbit reviews
-      const coderabbitReviews = reviews.data.filter(
-        review => review.user?.login === 'coderabbitai'
-      );
+      // Filter for CodeRabbit reviews (including bot variant)
+      const coderabbitReviews = reviews.data.filter(review => {
+        if (!review.user?.login) return false;
+        const username = review.user.login.toLowerCase();
+        return CODERABBIT_USERNAMES.includes(username);
+      });
 
       return coderabbitReviews.map(review => ({
         id: review.id,
