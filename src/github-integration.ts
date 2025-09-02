@@ -62,17 +62,22 @@ export class GitHubIntegration {
    */
   private async checkRateLimit(): Promise<void> {
     try {
-      const { data } = await this.octokit.rateLimit.get();
-      this.rateLimiter.remaining = data.rate.remaining;
-      this.rateLimiter.limit = data.rate.limit;
-      this.rateLimiter.resetTime = data.rate.reset * 1000; // Convert to milliseconds
+      const { data } = await this.octokit.rest.rateLimit.get();
+      // Use core resource which contains the standard API rate limits
+      // Fallback to data.rate for older API responses
+      const core = data.resources?.core ?? data.rate;
+      
+      this.rateLimiter.remaining = core.remaining;
+      this.rateLimiter.limit = core.limit;
+      this.rateLimiter.resetTime = core.reset * 1000; // Convert to milliseconds
       
       if (this.rateLimiter.remaining < 100) {
         console.warn(`⚠️ GitHub API rate limit low: ${this.rateLimiter.remaining}/${this.rateLimiter.limit} remaining`);
       }
       
       if (this.rateLimiter.remaining === 0) {
-        const waitTime = this.rateLimiter.resetTime - Date.now();
+        // Ensure waitTime is never negative
+        const waitTime = Math.max(0, this.rateLimiter.resetTime - Date.now());
         throw new Error(`GitHub API rate limit exceeded. Resets in ${Math.ceil(waitTime / 60000)} minutes`);
       }
     } catch (error) {
