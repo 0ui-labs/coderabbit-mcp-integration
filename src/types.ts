@@ -4,6 +4,9 @@ import { z } from 'zod';
 const githubNameRegex = /^[a-zA-Z0-9_.-]+$/;
 const branchNameRegex = /^[a-zA-Z0-9/_.-]+$/;
 
+// Helper function to create repository regex
+const createRepoRegex = () => new RegExp(`^${githubNameRegex.source}\\/${githubNameRegex.source}$`);
+
 // CodeRabbit Review Types
 export interface CodeRabbitReview {
   id: string;
@@ -53,7 +56,7 @@ export interface CodeSuggestion {
 
 // Input Schemas for Tools
 export const TriggerReviewSchema = z.object({
-  repository: z.string().regex(/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/, 'Repository must be in format owner/repo').describe('Repository in format owner/repo'),
+  repository: z.string().regex(createRepoRegex(), 'Repository must be in format owner/repo').describe('Repository in format owner/repo'),
   prNumber: z.number().positive('PR number must be positive').optional().describe('Pull request number'),
   branch: z.string().regex(branchNameRegex, 'Invalid branch name').optional().describe('Branch name to review'),
   scope: z.enum(['full', 'incremental', 'files']).optional().default('incremental'),
@@ -63,7 +66,7 @@ export const TriggerReviewSchema = z.object({
 
 export const GetReviewStatusSchema = z.object({
   reviewId: z.string().optional().describe('Specific review ID'),
-  repository: z.string().regex(/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/, 'Repository must be in format owner/repo').optional().describe('Repository name'),
+  repository: z.string().regex(createRepoRegex(), 'Repository must be in format owner/repo').optional().describe('Repository name'),
   prNumber: z.number().positive('PR number must be positive').optional().describe('Pull request number')
 });
 
@@ -74,7 +77,7 @@ export const AskCodeRabbitSchema = z.object({
 });
 
 export const ConfigureReviewSchema = z.object({
-  repository: z.string().regex(/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/, 'Repository must be in format owner/repo').describe('Repository to configure'),
+  repository: z.string().regex(createRepoRegex(), 'Repository must be in format owner/repo').describe('Repository to configure'),
   settings: z.object({
     autoReview: z.boolean().optional(),
     reviewLevel: z.enum(['light', 'standard', 'thorough']).optional(),
@@ -84,20 +87,14 @@ export const ConfigureReviewSchema = z.object({
 });
 
 export const GetReviewHistorySchema = z.object({
-  repository: z.string().regex(/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/, 'Repository must be in format owner/repo').describe('Repository to get history for'),
+  repository: z.string().regex(createRepoRegex(), 'Repository must be in format owner/repo').describe('Repository to get history for'),
   limit: z.number().positive('Limit must be positive').optional().default(10),
   since: z.string().optional().describe('ISO date string')
 });
 
 export const GenerateReportSchema = z.object({
-  from: z.union([
-    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in format YYYY-MM-DD'),
-    z.string().datetime({ message: 'Invalid datetime format' })
-  ]).describe('Start date (ISO format, e.g., 2025-01-01 or 2025-01-01T00:00:00Z)'),
-  to: z.union([
-    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in format YYYY-MM-DD'),
-    z.string().datetime({ message: 'Invalid datetime format' })
-  ]).describe('End date (ISO format, e.g., 2025-01-31 or 2025-01-31T23:59:59Z)'),
+  from: z.string().datetime({ offset: true }).describe('Start date (ISO format, e.g., 2025-01-01T00:00:00Z)'),
+  to: z.string().datetime({ offset: true }).describe('End date (ISO format, e.g., 2025-01-31T23:59:59Z)'),
   prompt: z.string().optional().describe('Custom prompt for the report'),
   groupBy: z.string().optional().describe('Group results by field'),
   orgId: z.string().optional().describe('Organization ID')
