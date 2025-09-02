@@ -5,6 +5,8 @@ export class SimpleCache<T> {
   private defaultTTL: number;
   private maxSize: number;
   private cleanupInterval: NodeJS.Timeout | null = null;
+  private hits: number = 0;
+  private misses: number = 0;
 
   constructor(defaultTTL: number = 300000, maxSize: number = 100) { // 5 minutes default, 100 entries max
     this.defaultTTL = defaultTTL;
@@ -39,6 +41,7 @@ export class SimpleCache<T> {
     const entry = this.cache.get(key);
     
     if (!entry) {
+      this.misses++;
       return null;
     }
 
@@ -46,9 +49,11 @@ export class SimpleCache<T> {
     
     if (isExpired) {
       this.cache.delete(key);
+      this.misses++;
       return null;
     }
 
+    this.hits++;
     return entry.data;
   }
 
@@ -62,6 +67,9 @@ export class SimpleCache<T> {
 
   clear(): void {
     this.cache.clear();
+    // Reset statistics when cache is cleared
+    this.hits = 0;
+    this.misses = 0;
   }
 
   // Clean up expired entries
@@ -81,13 +89,19 @@ export class SimpleCache<T> {
       this.cleanupInterval = null;
     }
     this.cache.clear();
+    this.hits = 0;
+    this.misses = 0;
   }
 
   // Get cache statistics
-  getStats(): { size: number; maxSize: number; hitRate?: number } {
+  getStats(): { size: number; maxSize: number; hitRate?: number; hits: number; misses: number } {
+    const totalRequests = this.hits + this.misses;
     return {
       size: this.cache.size,
-      maxSize: this.maxSize
+      maxSize: this.maxSize,
+      hits: this.hits,
+      misses: this.misses,
+      hitRate: totalRequests > 0 ? this.hits / totalRequests : undefined
     };
   }
 }

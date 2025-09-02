@@ -116,6 +116,9 @@ describe('SimpleCache', () => {
       const stats = cache.getStats();
       expect(stats.size).toBe(2);
       expect(stats.maxSize).toBe(5);
+      expect(stats.hits).toBe(0);
+      expect(stats.misses).toBe(0);
+      expect(stats.hitRate).toBeUndefined();
     });
   });
 });
