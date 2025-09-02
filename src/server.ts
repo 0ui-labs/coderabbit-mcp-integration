@@ -23,8 +23,7 @@ export async function startServer() {
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
   if (!CODERABBIT_API_KEY) {
-    console.error('Error: CODERABBIT_API_KEY environment variable is required');
-    process.exit(1);
+    throw new Error('CODERABBIT_API_KEY environment variable is required');
   }
 
   // Initialize clients
