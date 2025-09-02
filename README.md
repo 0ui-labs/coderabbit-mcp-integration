@@ -122,9 +122,14 @@ Generates detailed developer activity reports via the official CodeRabbit API.
 "Show me developer activity from 2024-01-01 to 2024-01-31"
 ```
 
+**Note:** Dates are automatically converted to ISO 8601 format. You can specify timezone or use UTC (Z).
+
 **Parameters:**
-- `from` (required): Start date in ISO format
-- `to` (required): End date in ISO format
+- `from` (required): Start date in ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ)
+  - Example: `2024-01-01T00:00:00Z` (UTC)
+  - Example: `2024-01-01T00:00:00+01:00` (with timezone offset)
+- `to` (required): End date in ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ)
+  - Example: `2024-01-31T23:59:59Z` (UTC)
 - `prompt` (optional): Custom prompt for the report
 - `groupBy` (optional): Data grouping option
 - `orgId` (optional): Organization ID
