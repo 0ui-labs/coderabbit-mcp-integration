@@ -109,7 +109,7 @@ Generiert Developer Activity Reports.
 ```bash
 # In deinem Projekt
 git add .
-git commit -m "feat: Neue Feature implementiert"
+git commit -m "feat: Neues Feature implementiert"
 git push origin feature-branch
 ```
 
