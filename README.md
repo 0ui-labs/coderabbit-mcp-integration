@@ -58,6 +58,8 @@ cp .env.example .env
 
 ### Step 2: Configure Environment Variables
 
+⚠️ **Security Note:** The `.env` file contains sensitive credentials. It is already listed in `.gitignore` and will NOT be committed to version control.
+
 Edit the `.env` file and add your keys:
 
 ```env
@@ -250,10 +252,24 @@ Logs are written to stderr and can be viewed in Claude Code's MCP logs.
 
 ## 🔒 Security
 
-- **Never** commit API keys or tokens in code
-- Always use environment variables or secure secret management
-- Rotate your tokens regularly
-- Limit GitHub token scopes to the minimum required
+### Environment Variables (.env)
+- **Never commit `.env` files** - they contain sensitive credentials
+- Ensure `.env` is listed in your `.gitignore` file
+- Use `.env.example` as a template without actual secrets
+- Store `.env` files securely with appropriate file permissions (e.g., `chmod 600 .env`)
+
+### Token Management
+- **Use minimal scopes** - only grant permissions that are absolutely necessary
+- **Rotate tokens regularly** - set calendar reminders for token rotation (recommended: every 90 days)
+- **Use fine-grained PATs** when possible for better security isolation
+- **Revoke tokens immediately** if they are accidentally exposed
+- **Monitor token usage** in GitHub Settings to detect unauthorized access
+
+### Best Practices
+- Never hardcode secrets in your source code
+- Use separate tokens for development and production
+- Consider using secret management tools for production deployments
+- Review and audit token permissions periodically
 
 ## 🐛 Troubleshooting
 
