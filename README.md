@@ -16,8 +16,8 @@ Ein Model Context Protocol (MCP) Server für die Integration von CodeRabbit Code
 ### 1. Repository klonen und Dependencies installieren
 
 ```bash
-git clone https://github.com/0ui-labs/coderabbit-mcp.git
-cd coderabbit-mcp
+git clone https://github.com/0ui-labs/coderabbit-mcp-integration.git
+cd coderabbit-mcp-integration
 npm install
 npm run build
 ```
