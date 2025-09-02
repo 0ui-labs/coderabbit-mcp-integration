@@ -129,6 +129,8 @@ export class GitHubIntegration {
     prNumber: number;
   }): Promise<CodeRabbitComment[]> {
     try {
+      await this.checkRateLimit();
+      
       const comments = await this.octokit.issues.listComments({
         owner: params.owner,
         repo: params.repo,
