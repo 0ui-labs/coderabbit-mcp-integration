@@ -10,7 +10,7 @@ export class CodeRabbitClient {
   private apiKey: string;
   private githubToken?: string;
 
-  constructor(apiKey: string, apiUrl: string = 'https://api.coderabbit.ai/api', githubToken?: string) {
+  constructor(apiKey: string, apiUrl: string = 'https://api.coderabbit.ai', githubToken?: string) {
     this.apiKey = apiKey;
     this.githubToken = githubToken;
     

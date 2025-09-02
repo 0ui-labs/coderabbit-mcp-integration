@@ -19,13 +19,12 @@ dotenv.config();
 export async function startServer() {
   // Validate required environment variables
   const CODERABBIT_API_KEY = process.env.CODERABBIT_API_KEY;
-  const CODERABBIT_API_URL = process.env.CODERABBIT_API_URL || 'https://api.coderabbit.ai/api';
+  const CODERABBIT_API_URL = process.env.CODERABBIT_API_URL || 'https://api.coderabbit.ai';
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
   if (!CODERABBIT_API_KEY) {
     throw new Error('CODERABBIT_API_KEY environment variable is required');
   }
-
   // Initialize clients
   const coderabbitClient = new CodeRabbitClient(CODERABBIT_API_KEY, CODERABBIT_API_URL, GITHUB_TOKEN);
   const githubIntegration = GITHUB_TOKEN ? new GitHubIntegration(GITHUB_TOKEN) : null;
