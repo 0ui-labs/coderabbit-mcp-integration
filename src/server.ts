@@ -50,7 +50,9 @@ export async function startServer() {
     async (args) => {
       try {
         const params = GenerateReportSchema.parse(args);
-        console.error(`[generateReport] Generating report from ${params.from} to ${params.to}`);
+        if (process.env.LOG_LEVEL === 'debug' || process.env.DEBUG) {
+          console.error(`[generateReport] Generating report from ${params.from} to ${params.to}`);
+        }
         
         const report = await coderabbitClient.generateReport(params);
         
@@ -82,7 +84,9 @@ export async function startServer() {
    * GitHub Integration Tools (REAL - via GitHub API)
    */
   if (githubIntegration) {
-    console.error('GitHub integration enabled - registering GitHub tools');
+    if (process.env.LOG_LEVEL === 'debug' || process.env.DEBUG) {
+      console.error('GitHub integration enabled - registering GitHub tools');
+    }
     
     /**
      * Tool: Create GitHub PR for CodeRabbit review
@@ -215,15 +219,19 @@ export async function startServer() {
       }
     );
   } else {
-    console.error('GitHub integration disabled - set GITHUB_TOKEN to enable');
+    if (process.env.LOG_LEVEL === 'info' || process.env.LOG_LEVEL === 'debug' || process.env.DEBUG) {
+      console.error('GitHub integration disabled - set GITHUB_TOKEN to enable');
+    }
   }
 
   // Connect to transport
   const transport = new StdioServerTransport();
   await server.connect(transport);
   
-  console.error('CodeRabbit MCP Server v2.0 is running (REAL features only)...');
-  console.error(`Available tools: ${githubIntegration ? '4' : '1'} tools registered`);
+  if (process.env.LOG_LEVEL === 'info' || process.env.LOG_LEVEL === 'debug' || process.env.DEBUG) {
+    console.error('CodeRabbit MCP Server v2.0 is running (REAL features only)...');
+    console.error(`Available tools: ${githubIntegration ? '4' : '1'} tools registered`);
+  }
   
   return server;
 }
