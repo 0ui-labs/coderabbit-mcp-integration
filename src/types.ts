@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+// Validation patterns for GitHub naming conventions
+const githubNameRegex = /^[a-zA-Z0-9_.-]+$/;
+const branchNameRegex = /^[a-zA-Z0-9/_.-]+$/;
+
 // CodeRabbit Review Types
 export interface CodeRabbitReview {
   id: string;
@@ -49,9 +53,9 @@ export interface CodeSuggestion {
 
 // Input Schemas for Tools
 export const TriggerReviewSchema = z.object({
-  repository: z.string().describe('Repository in format owner/repo'),
-  prNumber: z.number().optional().describe('Pull request number'),
-  branch: z.string().optional().describe('Branch name to review'),
+  repository: z.string().regex(/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/, 'Repository must be in format owner/repo').describe('Repository in format owner/repo'),
+  prNumber: z.number().positive('PR number must be positive').optional().describe('Pull request number'),
+  branch: z.string().regex(branchNameRegex, 'Invalid branch name').optional().describe('Branch name to review'),
   scope: z.enum(['full', 'incremental', 'files']).optional().default('incremental'),
   files: z.array(z.string()).optional().describe('Specific files to review'),
   useLocalChanges: z.boolean().optional().default(false).describe('Review uncommitted local changes')
@@ -59,18 +63,18 @@ export const TriggerReviewSchema = z.object({
 
 export const GetReviewStatusSchema = z.object({
   reviewId: z.string().optional().describe('Specific review ID'),
-  repository: z.string().optional().describe('Repository name'),
-  prNumber: z.number().optional().describe('Pull request number')
+  repository: z.string().regex(/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/, 'Repository must be in format owner/repo').optional().describe('Repository name'),
+  prNumber: z.number().positive('PR number must be positive').optional().describe('Pull request number')
 });
 
 export const AskCodeRabbitSchema = z.object({
-  reviewId: z.string().describe('Review ID to ask about'),
-  question: z.string().describe('Question to ask CodeRabbit'),
+  reviewId: z.string().min(1, 'Review ID cannot be empty').describe('Review ID to ask about'),
+  question: z.string().min(1, 'Question cannot be empty').describe('Question to ask CodeRabbit'),
   context: z.enum(['file', 'pr', 'general']).optional().default('general')
 });
 
 export const ConfigureReviewSchema = z.object({
-  repository: z.string().describe('Repository to configure'),
+  repository: z.string().regex(/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/, 'Repository must be in format owner/repo').describe('Repository to configure'),
   settings: z.object({
     autoReview: z.boolean().optional(),
     reviewLevel: z.enum(['light', 'standard', 'thorough']).optional(),
@@ -80,9 +84,40 @@ export const ConfigureReviewSchema = z.object({
 });
 
 export const GetReviewHistorySchema = z.object({
-  repository: z.string().describe('Repository to get history for'),
-  limit: z.number().optional().default(10),
+  repository: z.string().regex(/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/, 'Repository must be in format owner/repo').describe('Repository to get history for'),
+  limit: z.number().positive('Limit must be positive').optional().default(10),
   since: z.string().optional().describe('ISO date string')
+});
+
+export const GenerateReportSchema = z.object({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in ISO format (YYYY-MM-DD)').describe('Start date (ISO format, e.g., 2025-01-01)'),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in ISO format (YYYY-MM-DD)').describe('End date (ISO format, e.g., 2025-01-31)'),
+  prompt: z.string().optional().describe('Custom prompt for the report'),
+  groupBy: z.string().optional().describe('Group results by field'),
+  orgId: z.string().optional().describe('Organization ID')
+});
+
+// GitHub Integration Schemas
+export const CreatePRSchema = z.object({
+  owner: z.string().regex(githubNameRegex, 'Invalid owner/organization name').describe('Repository owner/organization'),
+  repo: z.string().regex(githubNameRegex, 'Invalid repository name').describe('Repository name'),
+  title: z.string().min(1, 'Title cannot be empty').describe('PR title'),
+  head: z.string().regex(branchNameRegex, 'Invalid branch name').describe('Head branch (source)'),
+  base: z.string().regex(branchNameRegex, 'Invalid branch name').optional().default('main').describe('Base branch (target)'),
+  body: z.string().optional().describe('PR description')
+});
+
+export const GetCodeRabbitCommentsSchema = z.object({
+  owner: z.string().regex(githubNameRegex, 'Invalid owner/organization name').describe('Repository owner/organization'),
+  repo: z.string().regex(githubNameRegex, 'Invalid repository name').describe('Repository name'),
+  prNumber: z.number().positive('PR number must be positive').describe('Pull request number')
+});
+
+export const AskCodeRabbitInPRSchema = z.object({
+  owner: z.string().regex(githubNameRegex, 'Invalid owner/organization name').describe('Repository owner/organization'),
+  repo: z.string().regex(githubNameRegex, 'Invalid repository name').describe('Repository name'),
+  prNumber: z.number().positive('PR number must be positive').describe('Pull request number'),
+  question: z.string().min(1, 'Question cannot be empty').describe('Question to ask CodeRabbit')
 });
 
 // Cache Entry Type
