@@ -28,7 +28,6 @@ export class GitHubIntegration {
   private octokit: InstanceType<typeof MyOctokit>;
   private git: SimpleGit;
   private rateLimiter = {
-    requests: 0,
     resetTime: Date.now() + 3600000, // 1 hour from now
     remaining: 5000,
     limit: 5000
