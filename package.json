@@ -1,0 +1,31 @@
+{
+  "name": "@coderabbit/mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for CodeRabbit integration with Claude Code",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "coderabbit-mcp": "dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.5",
+    "axios": "^1.11.0",
+    "dotenv": "^17.2.1",
+    "simple-git": "^3.28.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
