@@ -18,9 +18,24 @@ This MCP server enables Claude Code to interact with CodeRabbit - an AI-powered 
 1. **CodeRabbit GitHub App** must be installed in your repositories
    - Installation: https://github.com/apps/coderabbitai
    
-2. **GitHub Personal Access Token** with the following scopes:
-   - `repo` (Full control of private repositories)
-   - `read:org` (Read org and team membership)
+2. **GitHub Personal Access Token** (Recommended: Fine-grained PAT)
+   
+   **Option A: Fine-grained Personal Access Token (Recommended)**
+   - Go to GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens
+   - Select the repositories you want to access
+   - Grant these permissions:
+     - **Repository permissions:**
+       - Pull requests: Read & Write
+       - Issues: Read & Write  
+       - Contents: Read
+       - Metadata: Read
+     - **Account permissions:**
+       - Organization permissions: Read (if working with org repos)
+   
+   **Option B: Classic Personal Access Token**
+   - Scopes needed:
+     - `repo` (Full control of private repositories)
+     - `read:org` (Read org and team membership)
    
 3. **CodeRabbit API Key**
    - Available in your CodeRabbit dashboard
