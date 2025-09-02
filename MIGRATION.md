@@ -96,8 +96,8 @@ await githubIntegration.getCodeRabbitComments({
 **Removal:** v3.0.0  
 **Alternative:** Use `.coderabbit.yaml` configuration file
 
-```yaml
-# OLD (deprecated)
+```typescript
+// OLD (deprecated)
 await coderabbitClient.configureReview({
   repository: 'owner/repo',
   settings: {
@@ -105,7 +105,9 @@ await coderabbitClient.configureReview({
     reviewLevel: 'standard'
   }
 });
+```
 
+```yaml
 # NEW (recommended)
 # Create .coderabbit.yaml in your repository root:
 reviews:
