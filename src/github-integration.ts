@@ -235,6 +235,7 @@ export class GitHubIntegration {
     title: string;
     description?: string;
     files?: string[]; // Optional: specific files to add
+    includeUntracked?: boolean; // Optional: include all untracked files
   }) {
     // Store original branch for rollback
     const originalBranch = await this.git.revparse(['--abbrev-ref', 'HEAD']);
@@ -259,13 +260,21 @@ export class GitHubIntegration {
       if (params.files && params.files.length > 0) {
         // Add only specified files
         await this.git.add(params.files);
+      } else if (params.includeUntracked) {
+        // Add all changes including untracked files
+        await this.git.add(['-A']);
+        console.log('Added all changes including untracked files.');
       } else {
         // Add only tracked files that have been modified
-        await this.git.add(['-u']); // Only add updated tracked files
-        // For new files, require explicit file list
+        await this.git.add(['-u']); // Updates tracked files only
+        
+        // Check for untracked files and provide clear guidance
         const newStatus = await this.git.status();
         if (newStatus.not_added.length > 0) {
-          console.warn('New untracked files detected but not added. Specify files explicitly in params.files if needed.');
+          console.warn(`⚠️ ${newStatus.not_added.length} untracked file(s) detected but not included.`);
+          console.warn('To include them, either:');
+          console.warn('  1. Pass specific files via params.files: ["file1.ts", "file2.ts"]');
+          console.warn('  2. Set params.includeUntracked: true to add all new files');
         }
       }
       
