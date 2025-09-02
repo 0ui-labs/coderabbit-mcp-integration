@@ -1,5 +1,9 @@
 import { Octokit } from '@octokit/rest';
+import { throttling } from '@octokit/plugin-throttling';
 import { simpleGit, SimpleGit } from 'simple-git';
+
+// Create Octokit with throttling plugin
+const MyOctokit = Octokit.plugin(throttling);
 
 // CodeRabbit bot usernames (GitHub Apps can have [bot] suffix)
 const CODERABBIT_USERNAMES = ['coderabbitai', 'coderabbitai[bot]'];
@@ -21,7 +25,7 @@ interface CodeRabbitReview {
 }
 
 export class GitHubIntegration {
-  private octokit: Octokit;
+  private octokit: InstanceType<typeof MyOctokit>;
   private git: SimpleGit;
   private rateLimiter = {
     requests: 0,
@@ -35,7 +39,7 @@ export class GitHubIntegration {
       throw new Error('GitHub token is required and cannot be empty');
     }
     
-    this.octokit = new Octokit({
+    this.octokit = new MyOctokit({
       auth: githubToken,
       throttle: {
         onRateLimit: (retryAfter: number, options: any) => {
@@ -45,6 +49,7 @@ export class GitHubIntegration {
         },
         onSecondaryRateLimit: (retryAfter: number, options: any) => {
           console.warn(`Secondary rate limit hit for ${options.method} ${options.url}`);
+          console.warn(`Retrying after ${retryAfter} seconds!`);
           return true;
         }
       }
