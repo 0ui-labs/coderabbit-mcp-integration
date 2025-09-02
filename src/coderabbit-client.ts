@@ -10,24 +10,27 @@ export class CodeRabbitClient {
   private apiKey: string;
   private githubToken?: string;
 
-  constructor(apiKey: string, apiUrl: string = 'https://api.coderabbit.ai/v1', githubToken?: string) {
+  constructor(apiKey: string, apiUrl: string = 'https://api.coderabbit.ai/api', githubToken?: string) {
     this.apiKey = apiKey;
     this.githubToken = githubToken;
     
     this.api = axios.create({
       baseURL: apiUrl,
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'x-coderabbitai-api-key': apiKey,
         'Content-Type': 'application/json'
       },
-      timeout: 30000
+      timeout: 600000 // 10 minutes for report generation
     });
 
     this.git = simpleGit();
   }
 
   /**
-   * Trigger a CodeRabbit review
+   * Trigger a CodeRabbit review - NOT AVAILABLE via public API
+   * @deprecated Since v2.0.0 - Use GitHub PR workflow instead. Will be removed in v3.0.0
+   * @throws {Error} This endpoint is not available in the public API
+   * @see {@link GitHubIntegration.createPullRequest} for the recommended approach
    */
   async triggerReview(params: {
     repository: string;
@@ -37,107 +40,64 @@ export class CodeRabbitClient {
     files?: string[];
     useLocalChanges?: boolean;
   }): Promise<CodeRabbitReview> {
-    try {
-      // If using local changes, prepare diff
-      let diffContent: string | undefined;
-      if (params.useLocalChanges) {
-        diffContent = await this.getLocalDiff();
-      }
-
-      const payload = {
-        repository: params.repository,
-        pr_number: params.prNumber,
-        branch: params.branch || await this.getCurrentBranch(),
-        scope: params.scope || 'incremental',
-        files: params.files,
-        diff: diffContent
-      };
-
-      const response = await this.api.post('/reviews', payload);
-      
-      return this.mapToReview(response.data);
-    } catch (error) {
-      console.error('Error triggering review:', error);
-      throw error;
-    }
+    console.warn('[DEPRECATED] triggerReview is no longer available. Use GitHub PR workflow instead. This method will be removed in v3.0.0');
+    throw new Error('This endpoint is not available in the public API. Please use GitHub Pull Requests to trigger CodeRabbit reviews. See: https://github.com/apps/coderabbitai');
   }
 
   /**
-   * Get review status and results
+   * Get review status and results - NOT AVAILABLE via public API
+   * @deprecated Since v2.0.0 - Use getCodeRabbitComments from GitHub instead. Will be removed in v3.0.0
+   * @throws {Error} This endpoint is not available in the public API
+   * @see {@link GitHubIntegration.getCodeRabbitComments} for the recommended approach
    */
   async getReviewStatus(params: {
     reviewId?: string;
     repository?: string;
     prNumber?: number;
   }): Promise<CodeRabbitReview | null> {
-    try {
-      let endpoint = '/reviews';
-      
-      if (params.reviewId) {
-        endpoint = `/reviews/${params.reviewId}`;
-      } else if (params.repository && params.prNumber) {
-        endpoint = `/reviews/pr/${params.repository}/${params.prNumber}`;
-      } else {
-        throw new Error('Either reviewId or repository+prNumber required');
-      }
-
-      const response = await this.api.get(endpoint);
-      return this.mapToReview(response.data);
-    } catch (error) {
-      console.error('Error getting review status:', error);
-      return null;
-    }
+    console.warn('[DEPRECATED] getReviewStatus is no longer available. Use GitHub API to get CodeRabbit comments from PRs. This method will be removed in v3.0.0');
+    throw new Error('This endpoint is not available in the public API. Use GitHub API to get CodeRabbit comments from PRs.');
   }
 
   /**
-   * Interact with CodeRabbit about a review
+   * Interact with CodeRabbit about a review - NOT AVAILABLE via public API
+   * @deprecated Since v2.0.0 - Use askCodeRabbitInPR via GitHub comments instead. Will be removed in v3.0.0
+   * @throws {Error} This endpoint is not available in the public API
+   * @see {@link GitHubIntegration.askCodeRabbit} for the recommended approach
    */
   async askCodeRabbit(params: {
     reviewId: string;
     question: string;
     context?: 'file' | 'pr' | 'general';
   }): Promise<{ response: string; suggestions?: any[] }> {
-    try {
-      const response = await this.api.post(`/reviews/${params.reviewId}/chat`, {
-        message: params.question,
-        context: params.context || 'general'
-      });
-
-      return {
-        response: response.data.message,
-        suggestions: response.data.suggestions
-      };
-    } catch (error) {
-      console.error('Error asking CodeRabbit:', error);
-      throw error;
-    }
+    console.warn('[DEPRECATED] askCodeRabbit is no longer available. Use GitHub comments with @coderabbitai to interact. This method will be removed in v3.0.0');
+    throw new Error('This endpoint is not available in the public API. Use GitHub comments with @coderabbitai to interact.');
   }
 
   /**
-   * Get review history for a repository
+   * Get review history for a repository - NOT AVAILABLE via public API
+   * @deprecated Since v2.0.0 - Use GitHub API to list PR comments instead. Will be removed in v3.0.0
+   * @throws {Error} This endpoint is not available in the public API
+   * @see {@link GitHubIntegration.getCodeRabbitComments} for the recommended approach
    */
   async getReviewHistory(params: {
     repository: string;
     limit?: number;
     since?: string;
   }): Promise<CodeRabbitReview[]> {
-    try {
-      const response = await this.api.get(`/reviews/history/${params.repository}`, {
-        params: {
-          limit: params.limit || 10,
-          since: params.since
-        }
-      });
-
-      return response.data.reviews.map((r: any) => this.mapToReview(r));
-    } catch (error) {
-      console.error('Error getting review history:', error);
-      return [];
-    }
+    console.warn('[DEPRECATED] getReviewHistory is no longer available. Use GitHub API to get PR history with CodeRabbit comments. This method will be removed in v3.0.0');
+    throw new Error('This endpoint is not available in the public API. Use GitHub API to get PR history with CodeRabbit comments.');
   }
 
   /**
-   * Configure review settings for a repository
+   * Configure review settings for a repository - NOT AVAILABLE via public API
+   * @deprecated Since v2.0.0 - Use .coderabbit.yaml file in repository instead. Will be removed in v3.0.0
+   * @throws {Error} This endpoint is not available in the public API
+   * @example
+   * // Instead, create a .coderabbit.yaml file in your repository root:
+   * // reviews:
+   * //   auto: true
+   * //   level: standard
    */
   async configureReview(params: {
     repository: string;
@@ -148,10 +108,36 @@ export class CodeRabbitClient {
       ignorePatterns?: string[];
     };
   }): Promise<void> {
+    console.warn('[DEPRECATED] configureReview is no longer available. Configure CodeRabbit via .coderabbit.yaml file in your repository. This method will be removed in v3.0.0');
+    throw new Error('This endpoint is not available in the public API. Configure CodeRabbit via .coderabbit.yaml file in your repository.');
+  }
+
+  /**
+   * Generate a developer activity report (Beta)
+   */
+  async generateReport(params: {
+    from: string;
+    to: string;
+    prompt?: string;
+    groupBy?: string;
+    orgId?: string;
+  }): Promise<any> {
     try {
-      await this.api.put(`/config/${params.repository}`, params.settings);
+      console.log('Generating developer activity report...');
+      
+      const payload = {
+        from: params.from,
+        to: params.to,
+        prompt: params.prompt,
+        groupBy: params.groupBy,
+        orgId: params.orgId
+      };
+
+      const response = await this.api.post('/v1/report.generate', payload);
+      
+      return response.data;
     } catch (error) {
-      console.error('Error configuring review:', error);
+      console.error('Error generating report:', error);
       throw error;
     }
   }
