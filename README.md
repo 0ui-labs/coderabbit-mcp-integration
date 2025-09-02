@@ -2,8 +2,6 @@
 
 A Model Context Protocol (MCP) server for integrating CodeRabbit code reviews into Claude Code.
 
-Test change for CodeRabbit review.
-
 ## 🎯 What is this?
 
 This MCP server enables Claude Code to interact with CodeRabbit - an AI-powered code review tool for GitHub. The server uses the CodeRabbit GitHub App for automatic reviews and the official API for reports.
