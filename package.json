@@ -6,12 +6,12 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx src/index.ts",
-    "start": "node dist/index.js",
+    "dev": "tsx src/cli.ts",
+    "start": "node dist/cli.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-    "coderabbit-mcp": "dist/index.js"
+    "coderabbit-mcp": "dist/cli.js"
   },
   "keywords": [],
   "author": "",
