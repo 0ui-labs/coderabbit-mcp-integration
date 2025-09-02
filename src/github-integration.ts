@@ -4,6 +4,22 @@ import { simpleGit, SimpleGit } from 'simple-git';
 // CodeRabbit bot usernames (GitHub Apps can have [bot] suffix)
 const CODERABBIT_USERNAMES = ['coderabbitai', 'coderabbitai[bot]'];
 
+// Type definitions for return values
+interface CodeRabbitComment {
+  id: number;
+  body: string;
+  created_at: string;
+  html_url: string;
+}
+
+interface CodeRabbitReview {
+  id: number;
+  state: string;
+  body: string;
+  submitted_at: string | null;
+  html_url: string;
+}
+
 export class GitHubIntegration {
   private octokit: Octokit;
   private git: SimpleGit;
@@ -54,7 +70,7 @@ export class GitHubIntegration {
     owner: string;
     repo: string;
     prNumber: number;
-  }) {
+  }): Promise<CodeRabbitComment[]> {
     try {
       const comments = await this.octokit.issues.listComments({
         owner: params.owner,
@@ -71,9 +87,9 @@ export class GitHubIntegration {
 
       return coderabbitComments.map(comment => ({
         id: comment.id,
-        body: comment.body,
+        body: comment.body || '',
         created_at: comment.created_at,
-        html_url: comment.html_url
+        html_url: comment.html_url || ''
       }));
     } catch (error) {
       console.error('Error getting comments:', error);
@@ -88,7 +104,7 @@ export class GitHubIntegration {
     owner: string;
     repo: string;
     prNumber: number;
-  }) {
+  }): Promise<CodeRabbitReview[]> {
     try {
       const reviews = await this.octokit.pulls.listReviews({
         owner: params.owner,
@@ -105,10 +121,10 @@ export class GitHubIntegration {
 
       return coderabbitReviews.map(review => ({
         id: review.id,
-        state: review.state,
-        body: review.body,
-        submitted_at: review.submitted_at,
-        html_url: review.html_url
+        state: review.state || 'PENDING',
+        body: review.body || '',
+        submitted_at: review.submitted_at || null,
+        html_url: review.html_url || ''
       }));
     } catch (error) {
       console.error('Error getting reviews:', error);
