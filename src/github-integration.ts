@@ -5,12 +5,15 @@ import { simpleGit, SimpleGit } from 'simple-git';
 const CODERABBIT_USERNAMES = ['coderabbitai', 'coderabbitai[bot]'];
 
 // Type definitions for return values
-interface CodeRabbitComment {
-  id: number;
-  body: string;
-  created_at: string;
-  html_url: string;
-}
+  constructor(githubToken: string) {
+    if (!githubToken || githubToken.trim() === '') {
+      throw new Error('GitHub token is required and cannot be empty');
+    }
+    this.octokit = new Octokit({
+      auth: githubToken
+    });
+    this.git = simpleGit();
+  }
 
 interface CodeRabbitReview {
   id: number;

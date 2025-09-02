@@ -127,5 +127,5 @@ reviews:
 
 If you need help migrating, please:
 - Check the [README](README.md) for examples
-- Open an issue on [GitHub](https://github.com/yourusername/CodeRabbit_MCP_Server/issues)
+- Open an issue on [GitHub](https://github.com/0ui-labs/coderabbit-mcp-integration/issues)
 - Contact CodeRabbit support at https://coderabbit.ai/support

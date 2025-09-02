@@ -33,7 +33,7 @@ This MCP server enables Claude Code to interact with CodeRabbit - an AI-powered 
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/CodeRabbit_MCP_Server.git
+git clone https://github.com/0ui-labs/coderabbit-mcp-integration.git
 cd CodeRabbit_MCP_Server
 
 # Install dependencies
@@ -262,7 +262,7 @@ Contributions are welcome! Please create a pull request with your changes.
 ## 🆘 Support
 
 - **CodeRabbit Support**: https://coderabbit.ai/support
-- **GitHub Issues**: [Repository Issues](https://github.com/yourusername/CodeRabbit_MCP_Server/issues)
+- **GitHub Issues**: [Repository Issues](https://github.com/0ui-labs/coderabbit-mcp-integration/issues)
 - **MCP Documentation**: https://modelcontextprotocol.io/docs
 
 ## 🏷️ Version
