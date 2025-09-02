@@ -25,6 +25,10 @@ export class GitHubIntegration {
   private git: SimpleGit;
 
   constructor(githubToken: string) {
+    if (!githubToken || githubToken.trim() === '') {
+      throw new Error('GitHub token is required and cannot be empty');
+    }
+    
     this.octokit = new Octokit({
       auth: githubToken
     });
