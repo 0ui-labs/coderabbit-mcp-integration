@@ -1,187 +1,270 @@
 # CodeRabbit MCP Server
 
-Ein Model Context Protocol (MCP) Server für die Integration von CodeRabbit Code Reviews in Claude Code.
+A Model Context Protocol (MCP) server for integrating CodeRabbit code reviews into Claude Code.
 
-## Features
+Test change for CodeRabbit review.
 
-- 🔍 **Automatische Code Reviews** - Triggere CodeRabbit Reviews direkt aus Claude Code
-- 📊 **Review Status Tracking** - Überwache den Fortschritt und die Ergebnisse
-- 💬 **Interaktive Klärungen** - Stelle Fragen zu Review-Findings
-- 📈 **Review History** - Verfolge Review-Trends über Zeit
-- ⚙️ **Konfigurierbar** - Passe Review-Settings pro Repository an
-- 🔄 **Lokale Changes** - Reviewe uncommitted Changes vor dem Push
+## 🎯 What is this?
 
-## Installation
+This MCP server enables Claude Code to interact with CodeRabbit - an AI-powered code review tool for GitHub. The server uses the CodeRabbit GitHub App for automatic reviews and the official API for reports.
 
-### 1. Repository klonen und Dependencies installieren
+## ✨ Features
+
+- 📊 **Developer Activity Reports** - Generate detailed activity reports via the CodeRabbit API
+- 🔄 **GitHub PR Integration** - Create pull requests and trigger automatic CodeRabbit reviews
+- 💬 **Fetch Review Comments** - Get CodeRabbit's feedback directly in Claude Code
+- 🗣️ **Chat with CodeRabbit** - Ask questions about reviews directly in PRs via GitHub comments
+
+## 📋 Prerequisites
+
+1. **CodeRabbit GitHub App** must be installed in your repositories
+   - Installation: https://github.com/apps/coderabbitai
+   
+2. **GitHub Personal Access Token** with the following scopes:
+   - `repo` (Full control of private repositories)
+   - `read:org` (Read org and team membership)
+   
+3. **CodeRabbit API Key**
+   - Available in your CodeRabbit dashboard
+
+## 🚀 Installation
+
+### Step 1: Clone Repository and Setup
 
 ```bash
-git clone https://github.com/0ui-labs/coderabbit-mcp-integration.git
-cd coderabbit-mcp-integration
+# Clone repository
+git clone https://github.com/yourusername/CodeRabbit_MCP_Server.git
+cd CodeRabbit_MCP_Server
+
+# Install dependencies
 npm install
-npm run build
-```
 
-### 2. Umgebungsvariablen konfigurieren
-
-Kopiere `.env.example` zu `.env` und füge deine API-Keys ein:
-
-```bash
+# Configure environment variables
 cp .env.example .env
 ```
 
-Editiere `.env`:
+### Step 2: Configure Environment Variables
+
+Edit the `.env` file and add your keys:
+
 ```env
+# CodeRabbit API Configuration
 CODERABBIT_API_KEY=your_coderabbit_api_key_here
-GITHUB_TOKEN=your_github_token_here  # Optional, für erweiterte Features
+CODERABBIT_API_URL=https://api.coderabbit.ai/api
+
+# GitHub Configuration
+GITHUB_TOKEN=your_github_personal_access_token
+
+# Optional: Server Configuration
+LOG_LEVEL=info
+CACHE_TTL=300
 ```
 
-### 3. MCP Server in Claude Code konfigurieren
+### Step 3: Build the Server
 
-Füge folgende Konfiguration zu deiner Claude Code Settings hinzu:
+```bash
+npm run build
+```
+
+### Step 4: Configure in Claude Code
+
+Add the server to your Claude Code MCP configuration:
+
+**macOS/Linux:** `~/.config/claude/mcp_settings.json`
+**Windows:** `%APPDATA%\claude\mcp_settings.json`
 
 ```json
 {
   "mcpServers": {
     "coderabbit": {
       "command": "node",
-      "args": ["/pfad/zu/CodeRabbit_MCP_Server/dist/index.js"],
+      "args": ["/absolute/path/to/CodeRabbit_MCP_Server/dist/index.js"],
       "env": {
-        "CODERABBIT_API_KEY": "your_api_key",
-        "GITHUB_TOKEN": "your_github_token"
+        "CODERABBIT_API_KEY": "your_key",
+        "GITHUB_TOKEN": "your_token"
       }
     }
   }
 }
 ```
 
-Oder mit npm global installation:
+**Note:** You can set environment variables either in the `.env` file OR directly in the MCP configuration.
+
+## 📚 Available Tools
+
+### 1. `generateReport`
+Generates detailed developer activity reports via the official CodeRabbit API.
+
+**Usage in Claude Code:**
+```
+"Generate a CodeRabbit activity report for the last week"
+"Show me developer activity from 2024-01-01 to 2024-01-31"
+```
+
+**Parameters:**
+- `from` (required): Start date in ISO format
+- `to` (required): End date in ISO format
+- `prompt` (optional): Custom prompt for the report
+- `groupBy` (optional): Data grouping option
+- `orgId` (optional): Organization ID
+
+### 2. `createPRForReview`
+Creates a GitHub pull request and automatically triggers a CodeRabbit review.
+
+**Usage in Claude Code:**
+```
+"Create a PR from feature-branch to main in owner/repo"
+"Make a pull request for my changes with title 'Add new feature'"
+```
+
+**Parameters:**
+- `owner` (required): GitHub username or organization
+- `repo` (required): Repository name
+- `title` (required): PR title
+- `head` (required): Source branch
+- `base` (optional): Target branch (default: main)
+- `body` (optional): PR description
+
+### 3. `getCodeRabbitComments`
+Fetches all CodeRabbit review comments from a GitHub pull request.
+
+**Usage in Claude Code:**
+```
+"Get CodeRabbit comments from PR #42 in owner/repo"
+"Show me the review feedback for pull request 123"
+```
+
+**Parameters:**
+- `owner` (required): GitHub username or organization
+- `repo` (required): Repository name
+- `prNumber` (required): Pull request number
+
+### 4. `askCodeRabbitInPR`
+Ask CodeRabbit a question directly in a GitHub pull request.
+
+**Usage in Claude Code:**
+```
+"Ask CodeRabbit in PR #42: How can I improve the performance?"
+"Question for CodeRabbit in PR 123: Are there any security issues?"
+```
+
+**Parameters:**
+- `owner` (required): GitHub username or organization
+- `repo` (required): Repository name
+- `prNumber` (required): Pull request number
+- `question` (required): Your question for CodeRabbit
+
+## 🔄 Typical Workflow
+
+1. **Change code and commit**
+   ```bash
+   git add .
+   git commit -m "Add new feature"
+   git push origin feature-branch
+   ```
+
+2. **Create PR via Claude Code**
+   ```
+   "Create a PR from feature-branch to main in myorg/myrepo with title 'Add awesome feature'"
+   ```
+
+3. **Wait for CodeRabbit review** (usually 1-2 minutes)
+
+4. **Fetch review comments**
+   ```
+   "Get CodeRabbit comments from PR #123 in myorg/myrepo"
+   ```
+
+5. **Discuss with CodeRabbit**
+   ```
+   "Ask CodeRabbit in PR #123: Can you suggest a better approach for error handling?"
+   ```
+
+## ⚙️ Development
 
 ```bash
-npm install -g .
-```
-
-Dann in Claude Code:
-```json
-{
-  "mcpServers": {
-    "coderabbit": {
-      "command": "coderabbit-mcp"
-    }
-  }
-}
-```
-
-## Verfügbare MCP Tools
-
-### `triggerReview`
-Startet einen CodeRabbit Review.
-
-**Parameter:**
-- `repository` (string, required): Repository im Format "owner/repo"
-- `prNumber` (number, optional): Pull Request Nummer
-- `branch` (string, optional): Branch Name
-- `scope` (string, optional): "full" | "incremental" | "files"
-- `files` (string[], optional): Spezifische Dateien zum Review
-- `useLocalChanges` (boolean, optional): Reviewe lokale uncommitted Changes
-
-### `getReviewStatus`
-Ruft Status und Ergebnisse eines Reviews ab.
-
-**Parameter:**
-- `reviewId` (string, optional): Spezifische Review ID
-- `repository` (string, optional): Repository Name
-- `prNumber` (number, optional): Pull Request Nummer
-
-### `askCodeRabbit`
-Stelle eine Frage zu einem Review.
-
-**Parameter:**
-- `reviewId` (string, required): Review ID
-- `question` (string, required): Deine Frage
-- `context` (string, optional): "file" | "pr" | "general"
-
-### `configureReview`
-Konfiguriere Review-Einstellungen für ein Repository.
-
-**Parameter:**
-- `repository` (string, required): Repository Name
-- `settings` (object): Einstellungen
-  - `autoReview` (boolean): Automatische Reviews aktivieren
-  - `reviewLevel` (string): "light" | "standard" | "thorough"
-  - `customRules` (string[]): Eigene Review-Regeln
-  - `ignorePatterns` (string[]): Zu ignorierende Dateimuster
-
-### `getReviewHistory`
-Hole Review-Historie für ein Repository.
-
-**Parameter:**
-- `repository` (string, required): Repository Name
-- `limit` (number, optional): Anzahl der Reviews (default: 10)
-- `since` (string, optional): ISO Datum für Zeitfilter
-
-## Claude Code Subagent
-
-Der mitgelieferte `code-reviewer` Subagent wird automatisch aktiviert und:
-- Triggert proaktiv Reviews nach Code-Änderungen
-- Überwacht Review-Status
-- Präsentiert Ergebnisse strukturiert
-- Bietet interaktive Klärungen
-
-### Aktivierung
-
-Der Subagent wird automatisch installiert in `.claude/agents/code-reviewer.md`.
-
-### Manuelle Nutzung
-
-```
-Use the code-reviewer agent to review my recent changes
-```
-
-## Entwicklung
-
-### Lokaler Development Server
-
-```bash
+# Development server with hot reload
 npm run dev
-```
 
-### Build
+# TypeScript type checking
+npm run type-check
 
-```bash
+# Build for production
 npm run build
+
+# Start production server
+npm start
 ```
 
-### TypeScript Types
+## 🏗️ Project Structure
 
-Alle Types sind in `src/types.ts` definiert.
+```
+CodeRabbit_MCP_Server/
+├── src/
+│   ├── index.ts              # MCP server main file
+│   ├── coderabbit-client.ts  # CodeRabbit API client
+│   ├── github-integration.ts # GitHub API integration
+│   ├── types.ts              # TypeScript types & schemas
+│   └── cache.ts              # Cache implementation
+├── dist/                     # Compiled JavaScript files
+├── .env                      # Environment variables (don't commit!)
+├── .env.example              # Example environment variables
+└── package.json              # NPM dependencies
+```
 
-## Troubleshooting
+## 🔍 Debugging
 
-### "API Key nicht gefunden"
-- Stelle sicher, dass `CODERABBIT_API_KEY` in `.env` gesetzt ist
-- Prüfe, ob die Umgebungsvariable in der MCP Konfiguration weitergegeben wird
+Set `LOG_LEVEL=debug` in your `.env` file for detailed logs:
 
-### "Review startet nicht"
-- Verifiziere Repository-Format: "owner/repo"
-- Prüfe Netzwerkverbindung zur CodeRabbit API
-- Checke API-Key Berechtigungen
+```env
+LOG_LEVEL=debug
+```
 
-### "Keine lokalen Changes gefunden"
-- Stelle sicher, dass du im richtigen Git-Repository bist
-- Prüfe mit `git status` ob Changes vorhanden sind
+Logs are written to stderr and can be viewed in Claude Code's MCP logs.
 
-## API Limitierungen
+## ⚠️ Limitations
 
-- Rate Limits: Abhängig von deinem CodeRabbit Plan
-- Cache TTL: 5 Minuten default (konfigurierbar via `CACHE_TTL`)
+- **CodeRabbit API**: Only the `/v1/report.generate` endpoint is publicly available
+- **Reviews**: Work only through the GitHub App, not directly via API
+- **Local Reviews**: Not possible without a GitHub pull request
+- **Review History**: No public API endpoint available
 
-## Lizenz
+## 🔒 Security
 
-MIT
+- **Never** commit API keys or tokens in code
+- Always use environment variables or secure secret management
+- Rotate your tokens regularly
+- Limit GitHub token scopes to the minimum required
 
-## Support
+## 🐛 Troubleshooting
 
-Bei Fragen oder Problemen:
-- CodeRabbit Support: https://coderabbit.ai/support
-- MCP Dokumentation: https://modelcontextprotocol.io/docs
+### "CodeRabbit app not installed"
+→ Install the CodeRabbit GitHub App: https://github.com/apps/coderabbitai
+
+### "Bad credentials" 
+→ Check your GitHub token and ensure it has the correct scopes
+
+### "API key invalid"
+→ Verify your CodeRabbit API key in the dashboard
+
+### Server won't start
+→ Ensure all dependencies are installed: `npm install`
+→ Verify the build was successful: `npm run build`
+
+## 📄 License
+
+MIT - See [LICENSE](LICENSE) file
+
+## 🤝 Contributing
+
+Contributions are welcome! Please create a pull request with your changes.
+
+## 🆘 Support
+
+- **CodeRabbit Support**: https://coderabbit.ai/support
+- **GitHub Issues**: [Repository Issues](https://github.com/yourusername/CodeRabbit_MCP_Server/issues)
+- **MCP Documentation**: https://modelcontextprotocol.io/docs
+
+## 🏷️ Version
+
+Version: 2.0.0 - Real features only, no mock implementations!
