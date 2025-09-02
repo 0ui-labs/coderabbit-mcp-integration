@@ -76,7 +76,9 @@ Add the server to your Claude Code MCP configuration:
   "mcpServers": {
     "coderabbit": {
       "command": "node",
-      "args": ["/absolute/path/to/CodeRabbit_MCP_Server/dist/index.js"],
+      "args": [
+        "/path/to/CodeRabbit_MCP_Server/dist/cli.js"
+      ],
       "env": {
         "CODERABBIT_API_KEY": "your_key",
         "GITHUB_TOKEN": "your_token"
@@ -85,6 +87,10 @@ Add the server to your Claude Code MCP configuration:
   }
 }
 ```
+
+**Platform-specific paths:**
+- **macOS/Linux:** `/path/to/CodeRabbit_MCP_Server/dist/cli.js`
+- **Windows:** `C:\Users\username\CodeRabbit_MCP_Server\dist\cli.js`
 
 **Note:** You can set environment variables either in the `.env` file OR directly in the MCP configuration.
 
