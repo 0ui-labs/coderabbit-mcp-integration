@@ -90,8 +90,14 @@ export const GetReviewHistorySchema = z.object({
 });
 
 export const GenerateReportSchema = z.object({
-  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in ISO format (YYYY-MM-DD)').describe('Start date (ISO format, e.g., 2025-01-01)'),
-  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in ISO format (YYYY-MM-DD)').describe('End date (ISO format, e.g., 2025-01-31)'),
+  from: z.union([
+    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in format YYYY-MM-DD'),
+    z.string().datetime({ message: 'Invalid datetime format' })
+  ]).describe('Start date (ISO format, e.g., 2025-01-01 or 2025-01-01T00:00:00Z)'),
+  to: z.union([
+    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in format YYYY-MM-DD'),
+    z.string().datetime({ message: 'Invalid datetime format' })
+  ]).describe('End date (ISO format, e.g., 2025-01-31 or 2025-01-31T23:59:59Z)'),
   prompt: z.string().optional().describe('Custom prompt for the report'),
   groupBy: z.string().optional().describe('Group results by field'),
   orgId: z.string().optional().describe('Organization ID')
