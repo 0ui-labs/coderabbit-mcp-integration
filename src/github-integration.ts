@@ -23,6 +23,12 @@ interface CodeRabbitReview {
 export class GitHubIntegration {
   private octokit: Octokit;
   private git: SimpleGit;
+  private rateLimiter = {
+    requests: 0,
+    resetTime: Date.now() + 3600000, // 1 hour from now
+    remaining: 5000,
+    limit: 5000
+  };
 
   constructor(githubToken: string) {
     if (!githubToken || githubToken.trim() === '') {
@@ -30,9 +36,44 @@ export class GitHubIntegration {
     }
     
     this.octokit = new Octokit({
-      auth: githubToken
+      auth: githubToken,
+      throttle: {
+        onRateLimit: (retryAfter: number, options: any) => {
+          console.warn(`Request quota exhausted for request ${options.method} ${options.url}`);
+          console.warn(`Retrying after ${retryAfter} seconds!`);
+          return true;
+        },
+        onSecondaryRateLimit: (retryAfter: number, options: any) => {
+          console.warn(`Secondary rate limit hit for ${options.method} ${options.url}`);
+          return true;
+        }
+      }
     });
     this.git = simpleGit();
+  }
+
+  /**
+   * Check and update rate limit status
+   */
+  private async checkRateLimit(): Promise<void> {
+    try {
+      const { data } = await this.octokit.rateLimit.get();
+      this.rateLimiter.remaining = data.rate.remaining;
+      this.rateLimiter.limit = data.rate.limit;
+      this.rateLimiter.resetTime = data.rate.reset * 1000; // Convert to milliseconds
+      
+      if (this.rateLimiter.remaining < 100) {
+        console.warn(`⚠️ GitHub API rate limit low: ${this.rateLimiter.remaining}/${this.rateLimiter.limit} remaining`);
+      }
+      
+      if (this.rateLimiter.remaining === 0) {
+        const waitTime = this.rateLimiter.resetTime - Date.now();
+        throw new Error(`GitHub API rate limit exceeded. Resets in ${Math.ceil(waitTime / 60000)} minutes`);
+      }
+    } catch (error) {
+      // If we can't check rate limit, continue but log warning
+      console.warn('Could not check GitHub rate limit:', error);
+    }
   }
 
   /**
@@ -47,6 +88,8 @@ export class GitHubIntegration {
     body?: string;
   }) {
     try {
+      await this.checkRateLimit();
+      
       const pr = await this.octokit.pulls.create({
         owner: params.owner,
         repo: params.repo,
@@ -110,6 +153,8 @@ export class GitHubIntegration {
     prNumber: number;
   }): Promise<CodeRabbitReview[]> {
     try {
+      await this.checkRateLimit();
+      
       const reviews = await this.octokit.pulls.listReviews({
         owner: params.owner,
         repo: params.repo,
@@ -146,6 +191,8 @@ export class GitHubIntegration {
     question: string;
   }) {
     try {
+      await this.checkRateLimit();
+      
       // Post a comment mentioning @coderabbitai
       const comment = await this.octokit.issues.createComment({
         owner: params.owner,
