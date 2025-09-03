@@ -77,27 +77,29 @@ gh api repos/{owner}/{repo}/issues/{pr_number}/comments
 
 ### 4. Ergebnis-Präsentation
 
-#### Strukturierte Ausgabe:
+#### Strukturierte Ausgabe (mit Platzhaltern):
 ```markdown
 ## 🔍 CodeRabbit Review Ergebnisse
 
 ### 📊 Übersicht
-- PR: #[number]
-- Dateien geprüft: X
-- Issues gefunden: Y
-- Review-Link: [GitHub URL]
+- PR: #${pr_number}           # z.B. #42
+- Dateien geprüft: ${count}   # Anzahl der geprüften Dateien
+- Issues gefunden: ${issues}  # Anzahl gefundener Issues
+- Review-Link: ${github_url}  # Link zum GitHub PR
+- Bot-User: coderabbitai[bot] # Für API-Filter und Mentions
 
 ### 🚨 Kritische Findings
-[Von CodeRabbit identifizierte Issues]
+${critical_issues}  # Von CodeRabbit identifizierte kritische Issues
 
 ### 💡 Verbesserungsvorschläge
-[CodeRabbit Empfehlungen]
+${suggestions}      # CodeRabbit Empfehlungen
 
 ### ✅ Positive Aspekte
-[Was CodeRabbit gut fand]
+${positive_notes}   # Was CodeRabbit gut fand
 
 ### 💬 Interaktion
 Fragen an CodeRabbit im PR mit: @coderabbitai [Frage]
+Bot antwortet als: coderabbitai[bot]
 ```
 
 ## GITHUB INTEGRATION FEATURES
@@ -203,8 +205,12 @@ Via GitHub API tracken:
 - Häufigste Issue-Typen
 
 ```bash
-# Review-Historie abrufen
+# Review-Historie abrufen (Bot-User: coderabbitai[bot])
 gh api repos/{owner}/{repo}/pulls \
+  --jq '.[] | select(.user.login == "coderabbitai[bot]")'
+  
+# Oder nach Bot-Kommentaren filtern:
+gh api repos/{owner}/{repo}/issues/${pr_number}/comments \
   --jq '.[] | select(.user.login == "coderabbitai[bot]")'
 ```
 
