@@ -11,8 +11,11 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "lint": "tsc --noEmit",
-    "type-check": "tsc --noEmit"
+    "test:ci": "jest --ci --coverage --runInBand",
+    "type-check": "tsc --noEmit",
+    "lint": "npm run type-check",
+    "pretest": "npm run type-check",
+    "prebuild": "npm run type-check"
   },
   "bin": {
     "coderabbit-mcp": "dist/cli.js"
