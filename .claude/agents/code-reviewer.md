@@ -46,7 +46,15 @@ git commit -m "feat: description"
 git push -u origin review/feature-name
 
 # PR erstellen (triggert CodeRabbit automatisch)
-gh pr create --title "Review: Feature Name" --body "Please review @coderabbitai"
+# Default-Branch automatisch ermitteln oder explizit angeben
+gh pr create --title "Review: Feature Name" \
+  --body "Please review @coderabbitai" \
+  --base "$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')"
+  
+# Oder mit explizitem Ziel-Branch:
+gh pr create --title "Review: Feature Name" \
+  --body "Please review @coderabbitai" \
+  --base main  # oder develop, master, etc.
 ```
 
 #### Option B: Lokale Review-Simulation (FALLBACK)
