@@ -41,13 +41,15 @@ export class GitHubIntegration {
     this.octokit = new MyOctokit({
       auth: githubToken,
       throttle: {
-        onRateLimit: (retryAfter: number, options: any) => {
-          console.warn(`Request quota exhausted for request ${options.method} ${options.url}`);
+        onRateLimit: (retryAfter: number, options: unknown) => {
+          const opts = options as { method: string; url: string };
+          console.warn(`Request quota exhausted for request ${opts.method} ${opts.url}`);
           console.warn(`Retrying after ${retryAfter} seconds!`);
           return true;
         },
-        onSecondaryRateLimit: (retryAfter: number, options: any) => {
-          console.warn(`Secondary rate limit hit for ${options.method} ${options.url}`);
+        onSecondaryRateLimit: (retryAfter: number, options: unknown) => {
+          const opts = options as { method: string; url: string };
+          console.warn(`Secondary rate limit hit for ${opts.method} ${opts.url}`);
           console.warn(`Retrying after ${retryAfter} seconds!`);
           return true;
         }
@@ -64,7 +66,12 @@ export class GitHubIntegration {
       const { data } = await this.octokit.rest.rateLimit.get();
       // Use core resource which contains the standard API rate limits
       // Fallback to data.rate for older API responses
-      const core = data.resources?.core ?? data.rate;
+      const core = data?.resources?.core ?? data?.rate;
+      
+      if (!core) {
+        console.warn('Unable to retrieve rate limit information from GitHub API');
+        return;
+      }
       
       this.rateLimiter.remaining = core.remaining;
       this.rateLimiter.limit = core.limit;
@@ -301,8 +308,9 @@ export class GitHubIntegration {
         // Try to delete the created branch if it exists
         try {
           await this.git.deleteLocalBranch(params.branch, true);
-        } catch {
-          // Branch might not have been created, ignore
+        } catch (branchError) {
+          // Branch might not have been created, log for debugging
+          console.debug('Could not delete branch (may not exist):', branchError);
         }
       } catch (rollbackError) {
         console.error('Failed to restore original branch:', rollbackError);

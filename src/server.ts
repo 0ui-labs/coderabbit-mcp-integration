@@ -68,12 +68,12 @@ export async function startServer() {
         return {
           content: [{ type: 'text', text: content }]
         };
-      } catch (error: any) {
+      } catch (error) {
         console.error('[generateReport] Error:', error);
         return {
           content: [{ 
             type: 'text', 
-            text: `Error generating report: ${error.message || 'Unknown error'}` 
+            text: `Error generating report: ${(error instanceof Error ? error.message : 'Unknown error') || 'Unknown error'}` 
           }]
         };
       }
@@ -119,11 +119,11 @@ export async function startServer() {
           return {
             content: [{ type: 'text', text: content }]
           };
-        } catch (error: any) {
+        } catch (error) {
           return {
             content: [{ 
               type: 'text', 
-              text: `Error creating PR: ${error.message}` 
+              text: `Error creating PR: ${(error instanceof Error ? error.message : 'Unknown error')}` 
             }]
           };
         }
@@ -169,11 +169,11 @@ export async function startServer() {
           return {
             content: [{ type: 'text', text: content }]
           };
-        } catch (error: any) {
+        } catch (error) {
           return {
             content: [{ 
               type: 'text', 
-              text: `Error getting comments: ${error.message}` 
+              text: `Error getting comments: ${(error instanceof Error ? error.message : 'Unknown error')}` 
             }]
           };
         }
@@ -208,11 +208,11 @@ export async function startServer() {
           return {
             content: [{ type: 'text', text: content }]
           };
-        } catch (error: any) {
+        } catch (error) {
           return {
             content: [{ 
               type: 'text', 
-              text: `Error posting question: ${error.message}` 
+              text: `Error posting question: ${(error instanceof Error ? error.message : 'Unknown error')}` 
             }]
           };
         }
