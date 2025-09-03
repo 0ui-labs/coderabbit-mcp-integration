@@ -212,8 +212,9 @@ gh api repos/{owner}/{repo}/pulls \
 
 ```bash
 # .env Datei
-GITHUB_TOKEN=ghp_xxxxx      # Für GitHub API Zugriff
-CODERABBIT_API_KEY=cr_xxxxx # Deprecated, nicht mehr verwendet
+# Bevorzugt: Fine-grained PAT (github_pat_xxx) oder GitHub App Installation Token
+GITHUB_TOKEN=github_pat_xxxxx      # Für GitHub API Zugriff (Fine-grained PAT)
+CODERABBIT_API_KEY=cr_xxxxx         # Deprecated, nicht mehr verwendet
 ```
 
 ## MIGRATION VON V1 ZU V2
