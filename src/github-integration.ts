@@ -1,5 +1,9 @@
 import { Octokit } from '@octokit/rest';
+import { throttling } from '@octokit/plugin-throttling';
 import { simpleGit, SimpleGit } from 'simple-git';
+
+// Create Octokit with throttling plugin
+const MyOctokit = Octokit.plugin(throttling);
 
 // CodeRabbit bot usernames (GitHub Apps can have [bot] suffix)
 const CODERABBIT_USERNAMES = ['coderabbitai', 'coderabbitai[bot]'];
@@ -21,18 +25,64 @@ interface CodeRabbitReview {
 }
 
 export class GitHubIntegration {
-  private octokit: Octokit;
+  private octokit: InstanceType<typeof MyOctokit>;
   private git: SimpleGit;
+  private rateLimiter = {
+    resetTime: Date.now() + 3600000, // 1 hour from now
+    remaining: 5000,
+    limit: 5000
+  };
 
   constructor(githubToken: string) {
     if (!githubToken || githubToken.trim() === '') {
       throw new Error('GitHub token is required and cannot be empty');
     }
     
-    this.octokit = new Octokit({
-      auth: githubToken
+    this.octokit = new MyOctokit({
+      auth: githubToken,
+      throttle: {
+        onRateLimit: (retryAfter: number, options: any) => {
+          console.warn(`Request quota exhausted for request ${options.method} ${options.url}`);
+          console.warn(`Retrying after ${retryAfter} seconds!`);
+          return true;
+        },
+        onSecondaryRateLimit: (retryAfter: number, options: any) => {
+          console.warn(`Secondary rate limit hit for ${options.method} ${options.url}`);
+          console.warn(`Retrying after ${retryAfter} seconds!`);
+          return true;
+        }
+      }
     });
     this.git = simpleGit();
+  }
+
+  /**
+   * Check and update rate limit status
+   */
+  private async checkRateLimit(): Promise<void> {
+    try {
+      const { data } = await this.octokit.rest.rateLimit.get();
+      // Use core resource which contains the standard API rate limits
+      // Fallback to data.rate for older API responses
+      const core = data.resources?.core ?? data.rate;
+      
+      this.rateLimiter.remaining = core.remaining;
+      this.rateLimiter.limit = core.limit;
+      this.rateLimiter.resetTime = core.reset * 1000; // Convert to milliseconds
+      
+      if (this.rateLimiter.remaining < 100) {
+        console.warn(`⚠️ GitHub API rate limit low: ${this.rateLimiter.remaining}/${this.rateLimiter.limit} remaining`);
+      }
+      
+      if (this.rateLimiter.remaining === 0) {
+        // Ensure waitTime is never negative
+        const waitTime = Math.max(0, this.rateLimiter.resetTime - Date.now());
+        throw new Error(`GitHub API rate limit exceeded. Resets in ${Math.ceil(waitTime / 60000)} minutes`);
+      }
+    } catch (error) {
+      // If we can't check rate limit, continue but log warning
+      console.warn('Could not check GitHub rate limit:', error);
+    }
   }
 
   /**
@@ -47,6 +97,8 @@ export class GitHubIntegration {
     body?: string;
   }) {
     try {
+      await this.checkRateLimit();
+      
       const pr = await this.octokit.pulls.create({
         owner: params.owner,
         repo: params.repo,
@@ -76,6 +128,8 @@ export class GitHubIntegration {
     prNumber: number;
   }): Promise<CodeRabbitComment[]> {
     try {
+      await this.checkRateLimit();
+      
       const comments = await this.octokit.issues.listComments({
         owner: params.owner,
         repo: params.repo,
@@ -110,6 +164,8 @@ export class GitHubIntegration {
     prNumber: number;
   }): Promise<CodeRabbitReview[]> {
     try {
+      await this.checkRateLimit();
+      
       const reviews = await this.octokit.pulls.listReviews({
         owner: params.owner,
         repo: params.repo,
@@ -146,6 +202,8 @@ export class GitHubIntegration {
     question: string;
   }) {
     try {
+      await this.checkRateLimit();
+      
       // Post a comment mentioning @coderabbitai
       const comment = await this.octokit.issues.createComment({
         owner: params.owner,
@@ -176,6 +234,7 @@ export class GitHubIntegration {
     title: string;
     description?: string;
     files?: string[]; // Optional: specific files to add
+    includeUntracked?: boolean; // Optional: include all untracked files
   }) {
     // Store original branch for rollback
     const originalBranch = await this.git.revparse(['--abbrev-ref', 'HEAD']);
@@ -200,13 +259,21 @@ export class GitHubIntegration {
       if (params.files && params.files.length > 0) {
         // Add only specified files
         await this.git.add(params.files);
+      } else if (params.includeUntracked) {
+        // Add all changes including untracked files
+        await this.git.add(['-A']);
+        console.log('Added all changes including untracked files.');
       } else {
         // Add only tracked files that have been modified
-        await this.git.add(['-u']); // Only add updated tracked files
-        // For new files, require explicit file list
+        await this.git.add(['-u']); // Updates tracked files only
+        
+        // Check for untracked files and provide clear guidance
         const newStatus = await this.git.status();
         if (newStatus.not_added.length > 0) {
-          console.warn('New untracked files detected but not added. Specify files explicitly in params.files if needed.');
+          console.warn(`⚠️ ${newStatus.not_added.length} untracked file(s) detected but not included.`);
+          console.warn('To include them, either:');
+          console.warn('  1. Pass specific files via params.files: ["file1.ts", "file2.ts"]');
+          console.warn('  2. Set params.includeUntracked: true to add all new files');
         }
       }
       

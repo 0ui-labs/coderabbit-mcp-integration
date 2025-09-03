@@ -263,12 +263,29 @@ Logs are written to stderr and can be viewed in Claude Code's MCP logs.
 - Use `.env.example` as a template without actual secrets
 - Store `.env` files securely with appropriate file permissions (e.g., `chmod 600 .env`)
 
-### Token Management
-- **Use minimal scopes** - only grant permissions that are absolutely necessary
-- **Rotate tokens regularly** - set calendar reminders for token rotation (recommended: every 90 days)
-- **Use fine-grained PATs** when possible for better security isolation
-- **Revoke tokens immediately** if they are accidentally exposed
-- **Monitor token usage** in GitHub Settings to detect unauthorized access
+### GitHub Token Configuration
+
+#### ⚠️ CRITICAL SECURITY WARNING
+**DO NOT use Classic Personal Access Tokens with `repo` scope!** This grants full access to ALL your repositories including private ones. If compromised, an attacker gains complete control.
+
+#### ✅ REQUIRED: Fine-grained Personal Access Tokens
+1. Go to GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens
+2. Click "Generate new token"
+3. Set expiration (max 90 days recommended)
+4. Select **ONLY** the specific repositories you need
+5. Grant **ONLY** these permissions:
+   - **Contents**: Read and Write (for creating branches)
+   - **Pull requests**: Read and Write (for PR creation)
+   - **Issues**: Read and Write (for comments)
+   - **Metadata**: Read (always required)
+
+#### Token Security Best Practices
+- **Rotate tokens every 90 days** - set calendar reminders
+- **One token per application** - don't reuse tokens across projects
+- **Revoke immediately** if accidentally exposed (check git history!)
+- **Monitor usage** in GitHub Settings → Personal access tokens
+- **Use separate tokens** for development and production
+- **Never share tokens** - each developer should use their own
 
 ### Best Practices
 - Never hardcode secrets in your source code
